@@ -101,7 +101,7 @@ void setup()
     main_flag.process_disp_enable = 1;
     eeprom_read_block(&sram_param, &eep_param, sizeof(struct _eep_param));
     //
-#define CTC_SET_OCRnA(CTC_FREQ, CTC_PRESCALER) ( (uint8_t)( (F_CPU/ (2.0*CTC_PRESCALER*CTC_FREQ)) -1) )//q la division sea entre decimals
+    #define CTC_SET_OCRnA(CTC_FREQ, CTC_PRESCALER) ( (uint8_t)( (F_CPU/ (2.0*CTC_PRESCALER*CTC_FREQ)) -1) )//q la division sea entre decimals
     TCNT1 = 0x0000;//if no zero, -> t= 1/(16e6/1024) -> t*(65535-77) = 4.18s
     TCCR1A = 0;
     TCCR1B = (1 << WGM12) | (1 << CS12) | (0 << CS11) | (0 << CS10); //CTC PRES=256
@@ -188,31 +188,7 @@ void loop()
     }
     if (sm0 == 0)
     {
-        /*if (main_flag.newpiece)
-        {
-            main_flag.newpiece = 0;
 
-            #ifdef DEBUG_PROCESS
-            usart_print_PSTRstring(PSTR("newpiece\n"));
-            #endif
-            PinTo1(PORTWxTIMER_ACTV, PINxTIMER_ACTV);
-
-            newpiece_counter++;
-
-            if (newpiece_counter == 1)
-            {
-                timer_counter_enable = 1;
-            }
-
-            if (newpiece_counter == 2)
-            {
-                timer_1min_reset();
-                if (main_flag.process_disp_enable)
-                    {timer_display();}
-
-                newpiece_counter = 0;
-            }
-        }*/
         if (main_flag.newpiece)
         {
             main_flag.newpiece = 0;
@@ -225,7 +201,7 @@ void loop()
             timer_counter_enable = 1;
             timer_1min_reset();
             if (main_flag.process_disp_enable)
-            {timer_display();}
+                {timer_display();}
         }
 
         if (timer_counter_enable)//counter begin...
@@ -310,26 +286,7 @@ int8_t  temper_actual_get_new(void)
     }
     return cod_ret;
 }
-int8_t timer_1min(void)
-{
-    if (main_flag.f20ms )
-    {
-        if (++min_ticks >= (50 * 60) ) //1 minuto
-        {
-            min_ticks = 0x0000;
-            if (++min_counter > TMINUTES_MAX)
-            {min_counter = 0;}
-            return 1;
-        }
-    }
-    return 0;
-}
 
-void timer_1min_reset(void)
-{
-    min_ticks = 0x0000;
-    min_counter = 0x0000;
-}
 void temper_format_print(int16_t temper, char *str_out)
 {
     char buff[10];
@@ -405,7 +362,26 @@ void reset_all(void)
     RELAY2_OFF();
     PinTo0(PORTWxTIMER_ACTV, PINxTIMER_ACTV);
 }
+int8_t timer_1min(void)
+{
+    if (main_flag.f20ms )
+    {
+        if (++min_ticks >= (50 * 60) ) //1 minuto
+        {
+            min_ticks = 0x0000;
+            if (++min_counter > TMINUTES_MAX)
+            {min_counter = 0;}
+            return 1;
+        }
+    }
+    return 0;
+}
 
+void timer_1min_reset(void)
+{
+    min_ticks = 0x0000;
+    min_counter = 0x0000;
+}
 void minutes_format_print(int16_t min, char *str_out)
 {
     char buff[10];
@@ -431,6 +407,7 @@ void timer_display(void)
     minutes_format_print(min_counter, str);
     lcdan_set_cursor_in_row0(0x02);
     lcdan_print_string(str);
+    
 }
 void pulse_newpice(void)
 {

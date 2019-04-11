@@ -48,7 +48,7 @@ void PID_init(void)//cambiar de nombre
      //for mechanical relay...OK
     PID.K_proportional = 6;
     PID.K_integral = 5.5;
-    PID.K_derivative = 0;
+    PID.K_derivative = 0.5;
 }
 /*****************************************************
 *****************************************************/
