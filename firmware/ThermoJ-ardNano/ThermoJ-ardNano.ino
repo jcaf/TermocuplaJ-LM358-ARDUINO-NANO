@@ -41,7 +41,7 @@ volatile struct _isr_flag
 } isr_flag = {0};
 volatile uint8_t PID_out_as_dutycycle = 0; //using in ISR
 
-struct _main_flag main_flag = {0};
+volatile struct _main_flag main_flag = {0};
 
 struct _eep_param
 {
@@ -252,6 +252,9 @@ void loop()
                 PinTo0(PORTWxTIMER_ACTV, PINxTIMER_ACTV);
                 RELAY1_ON();
                 main_flag.temp_control = 1;
+                //
+                PID_out_as_dutycycle = (uint8_t) PID_control(temper_actual);
+                //
                 sm0++;
             }
         }
@@ -260,10 +263,12 @@ void loop()
     {
         if (main_flag.f20ms )
         {
-            if (++PID_access_delay >= 100)  //2s
+            //if (++PID_access_delay >= 100)  //2s
+            if (++PID_access_delay >= 500)  //10000ms = 10s
             {
                 PID_access_delay = 0;
                 PID_out_as_dutycycle = (uint8_t) PID_control(temper_actual);
+                //PID_out_as_dutycycle = 95;
                 //
             }
         }
@@ -278,7 +283,8 @@ void loop()
 ISR(TIMER1_COMPA_vect)//cada 20ms
 {
     isr_flag.f20ms = 1;
-    PID_control_output(PID_out_as_dutycycle);
+    if (main_flag.temp_control)
+        {PID_control_output(PID_out_as_dutycycle);}
 }
 
 int8_t  temper_actual_get_new(void)
@@ -386,7 +392,6 @@ void process_set_texts(void)
 }
 void reset_all(void)
 {
-
     newpiece_counter = 0;
     timer_counter_enable = 0;
     main_flag.temp_control = 0;
@@ -399,8 +404,6 @@ void reset_all(void)
     RELAY1_OFF();
     RELAY2_OFF();
     PinTo0(PORTWxTIMER_ACTV, PINxTIMER_ACTV);
-
-
 }
 
 void minutes_format_print(int16_t min, char *str_out)

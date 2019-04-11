@@ -10,7 +10,7 @@ struct _main_flag
     unsigned __a:3;
 };
 
-extern struct _main_flag main_flag;
+extern volatile struct _main_flag main_flag;
 
 
 //Output-pins

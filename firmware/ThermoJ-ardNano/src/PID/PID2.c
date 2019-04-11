@@ -41,8 +41,13 @@ void PID_init(void)//cambiar de nombre
     PID_reset_errors();
 
     //for solid relay...OK
-    PID.K_proportional = 1.6;
-    PID.K_integral = 1.1;
+    // PID.K_proportional = 1.6;
+    // PID.K_integral = 1.1;
+    // PID.K_derivative = 0;
+
+     //for mechanical relay...OK
+    PID.K_proportional = 6;
+    PID.K_integral = 5.5;
     PID.K_derivative = 0;
 }
 /*****************************************************
@@ -68,7 +73,7 @@ int16_t PID_control(int16_t pv)
     usart_print_PSTRstring(PSTR("EIb:"));usart_println_string(str);
     #endif // PID_CONTROL_DEBUG
 
-    _pid_integral_windup =  60;
+    _pid_integral_windup =  10;//10;
     // if (error > 25)
     // {
     //     _pid_integral_windup =  90;//70;//ok con etas ktes...
@@ -125,8 +130,9 @@ int16_t PID_control(int16_t pv)
 }
 
 /*****************************************************
-PID_control_output call from ISR
+PID_control_output call from ISR (SOLID STATE RELAY: CYCLE TIME 2s)
 *****************************************************/
+/*
 #define PWM_BASETIME_COUNTER_MAX 1//xdirectamente cada 20ms
 #define PWM_PERIOD_COUNTER_MAX PID_CONTROL_OUTPUT_MAX //
 
@@ -140,6 +146,54 @@ void PID_control_output(uint8_t pwm_dutycycle)
     {
         //pwm_basetime_counter= 0x00;
         //Cada 20ms         
+        if (pwm_onoff==1)
+        {
+            if (pwm_dutycycle>0)
+            {
+                
+                RELAY2_ON();//PinTo1(PORTWxRELAY2, PINxRELAY2);
+                if (++pwm_dutycycle_counter >= pwm_dutycycle)//0--100
+                {
+                    pwm_dutycycle_counter = 0;
+                    //
+                    if (pwm_dutycycle < PWM_PERIOD_COUNTER_MAX)
+                        {
+                            RELAY2_OFF();//PinTo0(PORTWxRELAY2, PINxRELAY2);
+                        } //only if less than
+
+                    pwm_onoff = 0;
+                }
+            }
+            else
+                {
+                    RELAY2_OFF();//PinTo0(PORTWxRELAY2, PINxRELAY2);
+                }
+        }
+        if (++pwm_period_counter >= PWM_PERIOD_COUNTER_MAX)//PID_CONTROL_OUTPUT_MAX
+        {
+            pwm_period_counter = 0x00;
+            pwm_onoff = 1;//begin new period
+        }
+    }
+}
+*/
+/*****************************************************
+PID_control_output call from ISR (MECHANICAL STATE RELAY: CYCLE TIME 10s)
+*****************************************************/
+#define PWM_BASETIME_COUNTER_MAX 5//20ms * 5 100ms
+#define PWM_PERIOD_COUNTER_MAX PID_CONTROL_OUTPUT_MAX //
+
+void PID_control_output(uint8_t pwm_dutycycle)
+{
+    static uint8_t pwm_basetime_counter;
+    static uint8_t pwm_dutycycle_counter;
+    static uint8_t pwm_period_counter;
+    static uint8_t pwm_onoff=1;
+
+    if (++pwm_basetime_counter >= PWM_BASETIME_COUNTER_MAX)
+    {
+        pwm_basetime_counter= 0x00;
+        //Cada 100ms         
         if (pwm_onoff==1)
         {
             if (pwm_dutycycle>0)
