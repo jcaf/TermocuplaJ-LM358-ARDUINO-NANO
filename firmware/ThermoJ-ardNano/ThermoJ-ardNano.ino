@@ -57,8 +57,8 @@ int8_t  temper_actual_get_new(void);
 void temper_display(float temper_actual);
 void reset_all(void);
 
-uint16_t min_ticks;
-uint16_t min_counter;
+// uint16_t min_ticks;
+// uint16_t min_counter;
 int8_t timer_counter_enable = 0;
 int8_t newpiece_counter;
 void timer_display(void);
@@ -77,6 +77,13 @@ void set_min(void);
 
 void process_set_texts(void);
 uint16_t PID_access_delay;
+
+struct _timer
+{
+    int8_t sec;
+    int16_t min;
+    int16_t ticks;
+}timer;
 
 #define DEBUG_PROCESS
 void setup()
@@ -206,13 +213,13 @@ void loop()
 
         if (timer_counter_enable)//counter begin...
         {
-            if (timer_1min())
+            if (timer_1min() & 0x0F)
             {
                 if (main_flag.process_disp_enable)
                 {timer_display();}
 
             }
-            if (min_counter >= sram_param.Tminutes_max)
+            if (timer.min >= sram_param.Tminutes_max)
             {
                 timer_1min_reset();
                 if (main_flag.process_disp_enable)
@@ -314,14 +321,15 @@ void temper_display(float temper)
     lcdan_print_string(str);
 }
 
-//T=999:12s Tc=OFF
+//t=999:12s Tc=OFF
 void process_set_texts(void)
 {
     if (main_flag.process_disp_enable)
     {
-        lcdan_clear();
+        //lcdan_clear();
         lcdan_set_cursor_in_row0(0x00);
-        lcdan_print_PSTRstring(PSTR("t=   m Tctrl=OFF"));
+        //lcdan_print_PSTRstring(PSTR("t=   m Tctrl=OFF"));
+        lcdan_print_PSTRstring(PSTR("t=   :  s TC=   "));
 
         timer_display();
 
@@ -362,6 +370,7 @@ void reset_all(void)
     RELAY2_OFF();
     PinTo0(PORTWxTIMER_ACTV, PINxTIMER_ACTV);
 }
+/*
 int8_t timer_1min(void)
 {
     if (main_flag.f20ms )
@@ -407,8 +416,87 @@ void timer_display(void)
     minutes_format_print(min_counter, str);
     lcdan_set_cursor_in_row0(0x02);
     lcdan_print_string(str);
-    
+
 }
+*/
+int8_t timer_1min(void)
+{
+    int8_t cod_ret=0;
+    if (main_flag.f20ms )
+    {
+        if (++timer.ticks >= (50) ) //1s
+        {
+            timer.ticks = 0x00;
+
+            cod_ret=0x1;
+            if (++timer.sec > 59)
+            {
+                timer.sec  =  0x00;
+
+                cod_ret|=(0x1<<4);
+                //
+                if (++timer.min > TMINUTES_MAX)
+                {
+                    timer.min = 0x0000;   
+                }
+            }
+        }
+    }
+    return cod_ret;
+}
+
+
+void timer_1min_reset(void)
+{
+    // min_ticks = 0x0000;
+    // min_counter = 0x0000;
+
+    timer.ticks = 0;
+    timer.sec = 0;
+    timer.min = 0;
+}
+
+
+void minutes_format_print(int16_t min, int16_t sec, char *str_out)
+{
+    char buff[10];
+    itoa(min, buff, 10); // convierte
+    
+    strcpy(str_out, "   :0 ");
+    if (min < 10)
+    {
+        strncpy(&str_out[2], buff, 1);
+    }
+    else if (min < 100)
+    {
+        strncpy(&str_out[1], buff, 2);
+    }
+    else
+    {
+        strncpy(&str_out[0], buff, 3);
+    }
+    //
+    itoa(sec, buff, 10); // convierte
+    if (sec < 10)
+    {
+        strncpy(&str_out[5], buff, 1);
+    }
+    else if (min < 100)
+    {
+        strncpy(&str_out[4], buff, 2);
+    }
+}
+
+void timer_display(void)
+{
+    char str[10];
+    minutes_format_print(timer.min, timer.sec, str);
+    lcdan_set_cursor_in_row0(0x02);
+    lcdan_print_string(str);
+}
+///////////
+
+
 void pulse_newpice(void)
 {
     static int8_t sm0;
