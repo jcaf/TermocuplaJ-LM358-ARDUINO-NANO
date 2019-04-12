@@ -203,7 +203,7 @@ void loop()
             #ifdef DEBUG_PROCESS
             usart_print_PSTRstring(PSTR("newpiece\n"));
             #endif
-            PinTo1(PORTWxTIMER_ACTV, PINxTIMER_ACTV);
+            
 
             timer_counter_enable = 1;
             timer_1min_reset();
@@ -213,10 +213,11 @@ void loop()
 
         if (timer_counter_enable)//counter begin...
         {
-            if (timer_1min() & 0x0F)
+            if (timer_1min() & 0x0F)//cada segundo
             {
                 if (main_flag.process_disp_enable)
                 {timer_display();}
+            	PinToggle(PORTWxTIMER_ACTV, PINxTIMER_ACTV);
 
             }
             if (timer.min >= sram_param.Tminutes_max)
@@ -370,55 +371,7 @@ void reset_all(void)
     RELAY2_OFF();
     PinTo0(PORTWxTIMER_ACTV, PINxTIMER_ACTV);
 }
-/*
-int8_t timer_1min(void)
-{
-    if (main_flag.f20ms )
-    {
-        if (++min_ticks >= (50 * 60) ) //1 minuto
-        {
-            min_ticks = 0x0000;
-            if (++min_counter > TMINUTES_MAX)
-            {min_counter = 0;}
-            return 1;
-        }
-    }
-    return 0;
-}
 
-void timer_1min_reset(void)
-{
-    min_ticks = 0x0000;
-    min_counter = 0x0000;
-}
-void minutes_format_print(int16_t min, char *str_out)
-{
-    char buff[10];
-    itoa(min, buff, 10); // convierte
-    // 3 positions to display: 999
-    strcpy(str_out, "   ");
-    if (min < 10)
-    {
-        strncpy(&str_out[2], buff, 1);
-    }
-    else if (min < 100)
-    {
-        strncpy(&str_out[1], buff, 2);
-    }
-    else
-    {
-        strncpy(&str_out[0], buff, 3);
-    }
-}
-void timer_display(void)
-{
-    char str[10];
-    minutes_format_print(min_counter, str);
-    lcdan_set_cursor_in_row0(0x02);
-    lcdan_print_string(str);
-
-}
-*/
 int8_t timer_1min(void)
 {
     int8_t cod_ret=0;
