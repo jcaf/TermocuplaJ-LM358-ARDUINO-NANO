@@ -192,6 +192,7 @@ void loop()
         #ifdef DEBUG_PROCESS
         usart_print_PSTRstring(PSTR("reset\n"));
         #endif
+        main_flag.newpiece = 1; //Se induce una nueva cuenta
     }
     if (sm0 == 0)
     {
