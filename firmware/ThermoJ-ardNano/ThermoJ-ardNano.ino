@@ -21,15 +21,15 @@ extern "C"
 
 //Ktes calibracion de Termocupla Tipo J
 //INA129
-float thermoJ_seedback = 52e-6;
-float gain_amp = 99.998;  //500 ohm medidos (2 resis de 100k en paralelo)
-int TMAX = TEMPER_MAX;//250;         //C
-int T25 = 25;           //C
-float diff_v = thermoJ_seedback * gain_amp * (TMAX - T25); //Volts
-float m = (TMAX - T25) / diff_v; //C/Volts
-float x_at_25C = 2.556; //volts @25 C
-float b = T25 - (m * x_at_25C);// b=-466.548292504312
-float x_at_250C = x_at_25C + diff_v;
+const float thermoJ_seedback = 52e-6;
+const float gain_amp = 99.998;  //500 ohm medidos (2 resis de 100k en paralelo)
+const int TMAX = TEMPER_MAX;//250;         //C
+const int T25 = 25;           //C
+const float diff_v = thermoJ_seedback * gain_amp * (TMAX - T25); //Volts
+const float m = (TMAX - T25) / diff_v; //C/Volts
+const float x_at_25C = 2.556; //volts @25 C
+const float b = T25 - (m * x_at_25C);// b=-466.548292504312
+const float x_at_250C = x_at_25C + diff_v;
 
 volatile struct _isr_flag
 {
