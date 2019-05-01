@@ -46,13 +46,15 @@ void PID_init(void)//cambiar de nombre
     // PID.K_derivative = 0;
 
      //for mechanical relay...OK
-    PID.K_proportional = 6;
-    PID.K_integral = 5.5;
-    PID.K_derivative = 0.5;
+    PID.K_proportional = 5;
+    PID.K_integral = 5;
+    PID.K_derivative = 3;
 }
 /*****************************************************
 *****************************************************/
+#ifdef DEBUG_PROCESS
 #define PID_CONTROL_DEBUG
+#endif // DEBUG_PROCCES
 int16_t PID_control(int16_t pv)
 {
     int16_t error;
@@ -73,12 +75,66 @@ int16_t PID_control(int16_t pv)
     usart_print_PSTRstring(PSTR("EIb:"));usart_println_string(str);
     #endif // PID_CONTROL_DEBUG
 
-    _pid_integral_windup =  10;//10;
+    //_pid_integral_windup =  10;//10;//10 era el valor optimizado??
+
+    if (error > 25)
+    {
+        _pid_integral_windup =  50;//70;//ok con etas ktes...
+    }
+    else if (error > 10)
+    {
+        if (pv > 80)
+        {
+            _pid_integral_windup =  10;
+        }
+        else if (pv > 60)
+        {__delay_us(50);//added for Relay arc
+            _pid_integral_windup =  5;
+        }
+        else if (pv > 40)
+        {
+            _pid_integral_windup =  3;
+        }
+        else if (pv > 20 )
+        {
+            _pid_integral_windup =  2;
+        }
+        else
+        {
+            _pid_integral_windup =  2;
+        }
+    }
+    else
+    {
+	if (pv > 80)
+        {
+            _pid_integral_windup =  1;
+        }
+        else if (pv > 60)
+        {
+            _pid_integral_windup =  1;
+        }
+        else if (pv > 40)
+        {
+            _pid_integral_windup =  1;
+        }
+        else if (pv > 20 )
+        {
+            _pid_integral_windup =  1;
+        }
+        else
+        {
+            _pid_integral_windup =  1;
+        }
+
+    }
+
+
     // if (error > 25)
     // {
     //     _pid_integral_windup =  90;//70;//ok con etas ktes...
     // }
-    
+
     if (PID.error_integral > _pid_integral_windup)//integral windup
         {PID.error_integral = _pid_integral_windup;}
     else if(PID.error_integral < 0)//-_pid_integral_windup)
@@ -130,54 +186,6 @@ int16_t PID_control(int16_t pv)
 }
 
 /*****************************************************
-PID_control_output call from ISR (SOLID STATE RELAY: CYCLE TIME 2s)
-*****************************************************/
-/*
-#define PWM_BASETIME_COUNTER_MAX 1//xdirectamente cada 20ms
-#define PWM_PERIOD_COUNTER_MAX PID_CONTROL_OUTPUT_MAX //
-
-void PID_control_output(uint8_t pwm_dutycycle)
-{
-    static uint8_t pwm_dutycycle_counter;
-    static uint8_t pwm_period_counter;
-    static uint8_t pwm_onoff=1;
-
-    if (1)//(++pwm_basetime_counter >= PWM_BASETIME_COUNTER_MAX)
-    {
-        //pwm_basetime_counter= 0x00;
-        //Cada 20ms         
-        if (pwm_onoff==1)
-        {
-            if (pwm_dutycycle>0)
-            {
-                
-                RELAY2_ON();//PinTo1(PORTWxRELAY2, PINxRELAY2);
-                if (++pwm_dutycycle_counter >= pwm_dutycycle)//0--100
-                {
-                    pwm_dutycycle_counter = 0;
-                    //
-                    if (pwm_dutycycle < PWM_PERIOD_COUNTER_MAX)
-                        {
-                            RELAY2_OFF();//PinTo0(PORTWxRELAY2, PINxRELAY2);
-                        } //only if less than
-
-                    pwm_onoff = 0;
-                }
-            }
-            else
-                {
-                    RELAY2_OFF();//PinTo0(PORTWxRELAY2, PINxRELAY2);
-                }
-        }
-        if (++pwm_period_counter >= PWM_PERIOD_COUNTER_MAX)//PID_CONTROL_OUTPUT_MAX
-        {
-            pwm_period_counter = 0x00;
-            pwm_onoff = 1;//begin new period
-        }
-    }
-}
-*/
-/*****************************************************
 PID_control_output call from ISR (MECHANICAL STATE RELAY: CYCLE TIME 10s)
 *****************************************************/
 #define PWM_BASETIME_COUNTER_MAX 5//20ms * 5 100ms
@@ -193,20 +201,22 @@ void PID_control_output(uint8_t pwm_dutycycle)
     if (++pwm_basetime_counter >= PWM_BASETIME_COUNTER_MAX)
     {
         pwm_basetime_counter= 0x00;
-        //Cada 100ms         
+        //Cada 100ms
         if (pwm_onoff==1)
         {
             if (pwm_dutycycle>0)
             {
-                
-                RELAY2_ON();//PinTo1(PORTWxRELAY2, PINxRELAY2);
+
+                RELAY1_ON();//PinTo1(PORTWxRELAY1 PINxRELAY1;
+
+
                 if (++pwm_dutycycle_counter >= pwm_dutycycle)//0--100
                 {
                     pwm_dutycycle_counter = 0;
                     //
                     if (pwm_dutycycle < PWM_PERIOD_COUNTER_MAX)
                         {
-                            RELAY2_OFF();//PinTo0(PORTWxRELAY2, PINxRELAY2);
+                            RELAY1_OFF();//PinTo0(PORTWxRELAY1 PINxRELAY1;
                         } //only if less than
 
                     pwm_onoff = 0;
@@ -214,7 +224,7 @@ void PID_control_output(uint8_t pwm_dutycycle)
             }
             else
                 {
-                    RELAY2_OFF();//PinTo0(PORTWxRELAY2, PINxRELAY2);
+                    RELAY1_OFF();//PinTo0(PORTWxRELAY1 PINxRELAY1;
                 }
         }
         if (++pwm_period_counter >= PWM_PERIOD_COUNTER_MAX)//PID_CONTROL_OUTPUT_MAX

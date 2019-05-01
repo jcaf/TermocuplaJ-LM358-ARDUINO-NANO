@@ -4,8 +4,7 @@
  * Created: 12/30/2016 11:21:41 PM
  *  Author: jcaf
  */
-#include <avr/io.h>
-#include <avr/interrupt.h>
+#include "../system.h"
 #include "usart.h"
 
 void USART_Init( unsigned int ubrr)

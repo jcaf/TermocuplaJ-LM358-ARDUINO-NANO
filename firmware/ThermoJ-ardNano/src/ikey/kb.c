@@ -165,7 +165,7 @@
 #define CONFIGIOxKBCOL_KEY16	CONFIGIOxKBCOL_4
 #define PINxKBCOL_KEY16		PINxKBCOL_4
 
-#define readkey_setup_time() _delay_us(1)//NEED TO STABILIZE THE SIGNAL, WITHOUT THIS, KB CAN READ OTHER KEY IN POS 13
+#define readkey_setup_time() _delay_us(2)//NEED TO STABILIZE THE SIGNAL, WITHOUT THIS, KB CAN READ OTHER KEY IN POS 13
 static inline uint8_t keyRead_pin_key1(void)
 {
 	PinTo0(PORTWxKBFIL_1, PINxKBFIL_1);
